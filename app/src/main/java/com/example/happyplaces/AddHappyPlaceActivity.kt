@@ -2,16 +2,21 @@ package com.example.happyplaces
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import androidx.appcompat.widget.Toolbar
+import com.example.happyplaces.databinding.ActivityAddHappyPlaceBinding
 
 class AddHappyPlaceActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityAddHappyPlaceBinding
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_add_happy_place)
-        setSupportActionBar(findViewById(R.id.toolbar_add_place))
+        binding = ActivityAddHappyPlaceBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+
+        setSupportActionBar(binding.toolbarAddPlace)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        findViewById<Toolbar>(R.id.toolbar_add_place).setNavigationOnClickListener {
+        binding.toolbarAddPlace.setNavigationOnClickListener {
             onBackPressed()
         }
     }
