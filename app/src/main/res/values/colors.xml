@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+
     <color name="purple_200">#FFBB86FC</color>
+
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
@@ -8,9 +10,16 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
 
-    <!-- Office Room 2 color pallet
-    #84c1ff • #add6ff • #d6eaff • #eaf4ff • #f8fbff -->
-    <color name="colorPrimary">#add6ff</color>
-    <color name="colorPrimaryDark">#84c1ff</color>
-    <color name="colorAccent">#d6eaff</color>
+
+    <!-- color pallet
+    https://coolors.co/ee4035-f37736-fdf498-7bc043-0492cf
+    #ee4035 • #f37736 • #fdf498 • #7bc043 • #0392cf-->
+    <color name="red">#ee4035</color>
+    <color name="orange">#f37736</color>
+    <color name="green_yellow">#7bc043</color>
+    <color name="blue">#0392cf</color>
+    <color name="green">#7bc043</color>
+
+    <color name="primary_text_color">#212121</color>
+    <color name="secondary_text_color">#9AA2AF</color>
 </resources>

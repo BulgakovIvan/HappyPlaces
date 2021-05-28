@@ -12,9 +12,7 @@
 
         <activity
             android:name=".AddHappyPlaceActivity"
-            android:screenOrientation="portrait"
-            android:label="ADD HAPPY PLACE"
-            android:theme="@style/CustomNoActionBarTheme"/>
+            android:screenOrientation="portrait"/>
 
         <activity
             android:name=".MainActivity">
@@ -26,5 +24,4 @@
         </activity>
 
     </application>
-
 </manifest>
