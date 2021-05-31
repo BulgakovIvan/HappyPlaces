@@ -1,13 +1,17 @@
 package com.example.happyplaces
 
 import android.Manifest
+import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.graphics.ImageDecoder
 import android.net.Uri
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.provider.MediaStore
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
@@ -17,6 +21,7 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -81,19 +86,46 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         binding.etDate.setText(sdf.format(cal.time).toString())
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (resultCode == Activity.RESULT_OK) {
+            if (requestCode == GALLERY) {
+                if (data != null) {
+                    val contentUri = data.data
+                    try {
+                        contentUri?.let {
+                            if(Build.VERSION.SDK_INT < 28) {
+                                val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, contentUri)
+                                binding.ivPlaceImage.setImageBitmap(bitmap)
+                            } else {
+                                val source = ImageDecoder.createSource(this.contentResolver, contentUri)
+                                val bitmap = ImageDecoder.decodeBitmap(source)
+                                binding.ivPlaceImage.setImageBitmap(bitmap)
+                            }
+                        }
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                        Toast.makeText(this@AddHappyPlaceActivity, "Failed!", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        }
+    }
+
     private fun choosePhotoFromGallery() {
         Dexter.withContext(this)
             .withPermissions(Manifest.permission.READ_EXTERNAL_STORAGE,
-                            Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                             Manifest.permission.WRITE_EXTERNAL_STORAGE)
             .withListener(object : MultiplePermissionsListener {
                 override fun onPermissionsChecked(report: MultiplePermissionsReport?)
                 {
                     if (report!!.areAllPermissionsGranted()) {
-                        Toast.makeText(
-                            this@AddHappyPlaceActivity,
-                            "Storage READ/WRITE permission are granted. Now you can select an image from GALLERY or lets says phone storage.",
-                            Toast.LENGTH_SHORT).show()
-                    }}
+                        val galleryIntent = Intent(Intent.ACTION_PICK,
+                                                   MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
+                        startActivityForResult(galleryIntent, GALLERY)
+                    }
+                }
 
                 override fun onPermissionRationaleShouldBeShown(permissions: MutableList<PermissionRequest>, token: PermissionToken)
                 {
@@ -107,7 +139,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private fun showRationalDialogForPermissions() {
         AlertDialog.Builder(this)
             .setMessage("It Looks like you have turned off permissions required for this feature. " +
-                    "It can be enabled under Application Settings")
+                        "It can be enabled under Application Settings")
             .setPositiveButton("GO TO SETTINGS")
             { _, _ ->
                 try {
@@ -123,5 +155,9 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             { dialog, _ ->
                 dialog.dismiss()
             }.show()
+    }
+
+    companion object {
+        private const val GALLERY = 1
     }
 }
