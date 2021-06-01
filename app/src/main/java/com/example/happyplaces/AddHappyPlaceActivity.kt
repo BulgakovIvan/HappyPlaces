@@ -6,12 +6,12 @@ import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider.getUriForFile
 import com.example.happyplaces.databinding.ActivityAddHappyPlaceBinding
 import com.karumi.dexter.Dexter
@@ -28,6 +28,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var bi: ActivityAddHappyPlaceBinding
     private var cal = Calendar.getInstance()
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
+
     private lateinit var imageUri: Uri
 
     private val pickImages = registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
@@ -67,6 +68,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
         bi.etDate.setOnClickListener(this)
         bi.tvAddImage.setOnClickListener(this)
+
+        openImage()
     }
 
     override fun onClick(v: View?) {
@@ -171,13 +174,34 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         val sdf = SimpleDateFormat(myFormat, Locale.getDefault())
         val timeStamp = sdf.format(Date())
 
-        val file = File.createTempFile(timeStamp, ".jpg")
-//        var file =  File(externalCacheDir!!.absoluteFile.toString()
-//                + File.separator + timeStamp + ".jpg")
+//        Create file in cache dir:
+//        val file = File.createTempFile(timeStamp, ".jpg")
+
+//        Create file in files subfolder:
+        val imageDir = this.filesDir.absolutePath + File.separator + "images"
+        File(imageDir).mkdir()
+
+        val file = File(imageDir+ File.separator + timeStamp + ".jpg")
 
         imageUri = getUriForFile(
-            this@AddHappyPlaceActivity,
+            this,
             "com.example.happyplaces.fileprovider",
             file)
+    }
+
+    private fun openImage() {
+        val imageDir = this.filesDir.absolutePath + File.separator + "images"
+        val dir = File(imageDir)
+        val filesList: Array<String>? = dir.list()
+        if (filesList != null) {
+            val file = File(imageDir, filesList[0])
+
+            val iUri = getUriForFile(
+                this@AddHappyPlaceActivity,
+                "com.example.happyplaces.fileprovider",
+                file)
+
+            bi.ivPlaceImage.setImageURI(iUri)
+        }
     }
 }
