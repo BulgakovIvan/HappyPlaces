@@ -12,41 +12,50 @@ import android.provider.Settings
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.FileProvider.getUriForFile
 import com.example.happyplaces.databinding.ActivityAddHappyPlaceBinding
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import java.io.File
 import java.text.SimpleDateFormat
 import java.util.*
 
 
 class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
-    private lateinit var binding: ActivityAddHappyPlaceBinding
+    private lateinit var bi: ActivityAddHappyPlaceBinding
     private var cal = Calendar.getInstance()
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
+    private lateinit var imageUri: Uri
 
-    val pickImages = registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
+    private val pickImages = registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
         if (result == null) {
             Toast.makeText(this, "Nothing selected / User Cancelled", Toast.LENGTH_SHORT).show()
         }
         else {
-            binding.ivPlaceImage.setImageURI(result)
+            bi.ivPlaceImage.setImageURI(result)
         }
 
+    }
+
+    private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) {success ->
+        if (success) {
+            bi.ivPlaceImage.setImageURI(imageUri)
+        }
     }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityAddHappyPlaceBinding.inflate(layoutInflater)
-        setContentView(binding.root)
+        bi = ActivityAddHappyPlaceBinding.inflate(layoutInflater)
+        setContentView(bi.root)
 
-        setSupportActionBar(binding.toolbarAddPlace)
+        setSupportActionBar(bi.toolbarAddPlace)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
 
-        binding.toolbarAddPlace.setNavigationOnClickListener {
+        bi.toolbarAddPlace.setNavigationOnClickListener {
             onBackPressed()
         }
 
@@ -56,8 +65,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             updateDateInView()
         }
 
-        binding.etDate.setOnClickListener(this)
-        binding.tvAddImage.setOnClickListener(this)
+        bi.etDate.setOnClickListener(this)
+        bi.tvAddImage.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {
@@ -78,7 +87,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 pictureDialog.setItems(pictureDialogItems) {_, which ->
                     when(which){
                         0 -> choosePhotoFromGallery()
-                        1 -> Toast.makeText(this, "Capture photo from camera", Toast.LENGTH_SHORT).show()
+                        1 -> takePhotoFromCamera()
                     }
                 }
                 pictureDialog.show()
@@ -89,7 +98,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private fun updateDateInView() {
         val myFormat = "dd.MM.yyyy"
         val sdf = SimpleDateFormat(myFormat, Locale.getDefault())
-        binding.etDate.setText(sdf.format(cal.time).toString())
+        bi.etDate.setText(sdf.format(cal.time).toString())
     }
 
     private fun choosePhotoFromGallery() {
@@ -101,6 +110,29 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 {
                     if (report!!.areAllPermissionsGranted()) {
                         pickImages.launch("image/*")
+                    }
+                }
+
+                override fun onPermissionRationaleShouldBeShown(permissions: MutableList<PermissionRequest>, token: PermissionToken)
+                {
+                    showRationalDialogForPermissions()
+                }
+            })
+            .onSameThread()
+            .check()
+    }
+
+    private fun takePhotoFromCamera() {
+        Dexter.withContext(this)
+            .withPermissions(Manifest.permission.READ_EXTERNAL_STORAGE,
+                             Manifest.permission.WRITE_EXTERNAL_STORAGE,
+                             Manifest.permission.CAMERA)
+            .withListener(object : MultiplePermissionsListener {
+                override fun onPermissionsChecked(report: MultiplePermissionsReport?)
+                {
+                    if (report!!.areAllPermissionsGranted()) {
+                        createImageFile()
+                        takePicture.launch(imageUri)
                     }
                 }
 
@@ -132,5 +164,20 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             { dialog, _ ->
                 dialog.dismiss()
             }.show()
+    }
+
+    private fun createImageFile() {
+        val myFormat = "yyyy-MM-dd_HH.mm.ss"
+        val sdf = SimpleDateFormat(myFormat, Locale.getDefault())
+        val timeStamp = sdf.format(Date())
+
+        val file = File.createTempFile(timeStamp, ".jpg")
+//        var file =  File(externalCacheDir!!.absoluteFile.toString()
+//                + File.separator + timeStamp + ".jpg")
+
+        imageUri = getUriForFile(
+            this@AddHappyPlaceActivity,
+            "com.example.happyplaces.fileprovider",
+            file)
     }
 }
