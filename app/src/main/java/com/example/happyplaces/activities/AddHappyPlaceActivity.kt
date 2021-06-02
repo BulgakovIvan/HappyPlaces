@@ -1,4 +1,4 @@
-package com.example.happyplaces
+package com.example.happyplaces.activities
 
 import android.Manifest
 import android.app.AlertDialog
@@ -13,6 +13,7 @@ import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider.getUriForFile
+import com.example.happyplaces.R
 import com.example.happyplaces.databinding.ActivityAddHappyPlaceBinding
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
@@ -30,13 +31,18 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
 
     private lateinit var imageUri: Uri
+//    private var saveImageToInternalStorage: Uri? = null
+    
+    private var mLatitude: Double = 0.0
+    private var mLongitude: Double = 0.0
 
     private val pickImages = registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
         if (result == null) {
             Toast.makeText(this, "Nothing selected / User Cancelled", Toast.LENGTH_SHORT).show()
         }
         else {
-            bi.ivPlaceImage.setImageURI(result)
+            imageUri = result
+            bi.ivPlaceImage.setImageURI(imageUri)
         }
 
     }
@@ -68,6 +74,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
         bi.etDate.setOnClickListener(this)
         bi.tvAddImage.setOnClickListener(this)
+        bi.btnSave.setOnClickListener(this)
 
         openImage()
     }
@@ -94,6 +101,9 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
                 pictureDialog.show()
+            }
+            R.id.btn_save -> {
+                // TODO: 02.06.2021 save in database
             }
         }
     }
@@ -178,6 +188,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 //        val file = File.createTempFile(timeStamp, ".jpg")
 
 //        Create file in files subfolder:
+        // TODO: 02.06.2021 check for exist
         val imageDir = this.filesDir.absolutePath + File.separator + "images"
         File(imageDir).mkdir()
 
