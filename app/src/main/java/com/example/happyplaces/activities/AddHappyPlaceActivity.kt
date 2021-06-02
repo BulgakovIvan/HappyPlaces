@@ -223,11 +223,14 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 //        val file = File.createTempFile(timeStamp, ".jpg")
 
 //        Create file in files subfolder:
-        // TODO: 02.06.2021 check for exist
-        val imageDir = this.filesDir.absolutePath + File.separator + "images"
-        File(imageDir).mkdir()
+        val imagePath = this.filesDir.absolutePath + File.separator + "images"
 
-        val file = File(imageDir+ File.separator + timeStamp + ".jpg")
+        val imageDir = File(imagePath)
+        if (!imageDir.exists()) {
+            imageDir.mkdir()
+        }
+
+        val file = File(imagePath+ File.separator + timeStamp + ".jpg")
 
         imageUri = getUriForFile(
             this,
