@@ -1,8 +1,9 @@
 package com.example.happyplaces.activities
 
 import android.net.Uri
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Parcelable
+import androidx.appcompat.app.AppCompatActivity
 import com.example.happyplaces.databinding.ActivityHappyPlaceDetailBinding
 import com.example.happyplaces.models.HappyPlaceModel
 
@@ -17,7 +18,7 @@ class HappyPlaceDetailActivity : AppCompatActivity() {
         var happyPlaceDetailModel: HappyPlaceModel? = null
 
         if (intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)) {
-            happyPlaceDetailModel = intent.getSerializableExtra(
+            happyPlaceDetailModel = intent.getParcelableExtra<Parcelable>(
                 MainActivity.EXTRA_PLACE_DETAILS) as HappyPlaceModel
         }
 
