@@ -16,7 +16,7 @@
     #ee4035 • #f37736 • #fdf498 • #7bc043 • #0392cf-->
     <color name="red">#ee4035</color>
     <color name="orange">#f37736</color>
-    <color name="green_yellow">#7bc043</color>
+    <color name="green_yellow">#fdf498</color>
     <color name="blue">#0392cf</color>
     <color name="green">#7bc043</color>
 
@@ -25,4 +25,5 @@
 
     <color name="circular_image_border_color">#757575</color>
     <color name="item_happy_place_description_text_color">#606060</color>
+    <color name="detail_screen_description_text_color">#757575</color>
 </resources>
