@@ -7,4 +7,6 @@
     <string name="text_add_image">ADD IMAGE</string>
     <string name="btn_text_save">SAVE</string>
     <string name="acButton_description">Add new happy place</string>
+
+    <string name="image_content_description">image</string>
 </resources>

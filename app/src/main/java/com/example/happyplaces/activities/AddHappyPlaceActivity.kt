@@ -23,9 +23,10 @@ import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import java.io.File
+import java.io.FileOutputStream
+import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
-
 
 class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var bi: ActivityAddHappyPlaceBinding
@@ -33,12 +34,11 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
 
     private var imageUri: Uri? = null
-//    private var saveImageToInternalStorage: Uri? = null
 
     private var mLatitude: Double = 0.0
     private var mLongitude: Double = 0.0
 
-    private val pickImages = registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
+    private val pickImagesFromGallery = registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
         if (result == null) {
             Toast.makeText(this, "Nothing selected / User Cancelled", Toast.LENGTH_SHORT).show()
         }
@@ -49,7 +49,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     }
 
-    private val takePicture = registerForActivityResult(ActivityResultContracts.TakePicture()) {success ->
+    private val takePictureByCamera = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
             bi.ivPlaceImage.setImageURI(imageUri)
         }
@@ -77,8 +77,6 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         bi.etDate.setOnClickListener(this)
         bi.tvAddImage.setOnClickListener(this)
         bi.btnSave.setOnClickListener(this)
-
-//        openImage()
     }
 
     override fun onClick(v: View?) {
@@ -118,25 +116,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     imageUri == null -> {
                         Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show()
                     } else -> {
-                        val happyPlaceModel = HappyPlaceModel(
-                            0,
-                            bi.etTitle.text.toString(),
-                            imageUri.toString(),
-                            bi.etDescription.text.toString(),
-                            bi.etDate.text.toString(),
-                            bi.etLocation.text.toString(),
-                            mLatitude,
-                            mLongitude
-                        )
-                        val dbHandler = DatabaseHandler(this)
-                        val addHappyPlace = dbHandler.addHappyPlace(happyPlaceModel)
-
-                        if (addHappyPlace > 0) {
-                            Toast.makeText(this,
-                                "The happy place details are inserted successfully",
-                                Toast.LENGTH_SHORT).show()
-                            finish()
-                        }
+                        dbSave()
                     }
                 }
             }
@@ -157,7 +137,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 override fun onPermissionsChecked(report: MultiplePermissionsReport?)
                 {
                     if (report!!.areAllPermissionsGranted()) {
-                        pickImages.launch("image/*")
+                        pickImagesFromGallery.launch("image/*")
                     }
                 }
 
@@ -179,8 +159,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                 override fun onPermissionsChecked(report: MultiplePermissionsReport?)
                 {
                     if (report!!.areAllPermissionsGranted()) {
-                        createImageFile()
-                        takePicture.launch(imageUri)
+                        cacheImageUri()
+                        takePictureByCamera.launch(imageUri)
                     }
                 }
 
@@ -214,23 +194,10 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             }.show()
     }
 
-    private fun createImageFile() {
-        val myFormat = "yyyy-MM-dd_HH.mm.ss"
-        val sdf = SimpleDateFormat(myFormat, Locale.getDefault())
-        val timeStamp = sdf.format(Date())
+    private fun cacheImageUri() {
+        val fileName = UUID.randomUUID().toString()
 
-//        Create file in cache dir:
-//        val file = File.createTempFile(timeStamp, ".jpg")
-
-//        Create file in files subfolder:
-        val imagePath = this.filesDir.absolutePath + File.separator + "images"
-
-        val imageDir = File(imagePath)
-        if (!imageDir.exists()) {
-            imageDir.mkdir()
-        }
-
-        val file = File(imagePath+ File.separator + timeStamp + ".jpg")
+        val file = File.createTempFile(fileName, ".jpg")
 
         imageUri = getUriForFile(
             this,
@@ -238,19 +205,56 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             file)
     }
 
-    private fun openImage() {
-        val imageDir = this.filesDir.absolutePath + File.separator + "images"
-        val dir = File(imageDir)
-        val filesList: Array<String>? = dir.list()
-        if (filesList != null) {
-            val file = File(imageDir, filesList[0])
+    private fun copyToImageDir(uri: Uri): Uri {
+        val mimeType = contentResolver.getType(uri) // image/jpg
+        val fileName = "${UUID.randomUUID()}.${mimeType!!.split("/")[1]}"
 
-            val iUri = getUriForFile(
-                this@AddHappyPlaceActivity,
-                "com.example.happyplaces.fileprovider",
-                file)
+        val imageDir = File(this.filesDir.absolutePath + File.separator + "images")
+        if (!imageDir.exists()) {
+            imageDir.mkdir()
+        }
 
-            bi.ivPlaceImage.setImageURI(iUri)
+        val outputFile = File(imageDir, fileName)
+        val stream: OutputStream = FileOutputStream(outputFile)
+
+        contentResolver.openInputStream(uri)?.copyTo(stream)
+
+        return getUriForFile(
+            this,
+            "com.example.happyplaces.fileprovider",
+            outputFile)
+    }
+
+    private fun dbSave() {
+        val happyPlaceModel = HappyPlaceModel(
+            0,
+            bi.etTitle.text.toString(),
+            copyToImageDir(imageUri!!).toString(),
+            bi.etDescription.text.toString(),
+            bi.etDate.text.toString(),
+            bi.etLocation.text.toString(),
+            mLatitude,
+            mLongitude
+        )
+        val dbHandler = DatabaseHandler(this)
+        val addHappyPlace = dbHandler.addHappyPlace(happyPlaceModel)
+
+        if (addHappyPlace > 0) {
+            Toast.makeText(this,
+                "The happy place details are inserted successfully",
+                Toast.LENGTH_SHORT).show()
+
+            finish()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        val files = this.cacheDir.listFiles()
+
+        if (files != null) {
+            for (file in files) file.delete()
         }
     }
 }
