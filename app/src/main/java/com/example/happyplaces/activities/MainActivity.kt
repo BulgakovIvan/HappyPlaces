@@ -7,18 +7,21 @@ import android.os.Bundle
 import android.view.View
 import androidx.activity.result.ActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.happyplaces.R
+import androidx.recyclerview.widget.RecyclerView
 import com.example.happyplaces.adapters.HappyPlacesAdapter
 import com.example.happyplaces.database.DatabaseHandler
 import com.example.happyplaces.databinding.ActivityMainBinding
 import com.example.happyplaces.models.HappyPlaceModel
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import pl.kitek.rvswipetodelete.SwipeToEditCallback
 
 class MainActivity : AppCompatActivity() {
     private lateinit var bi: ActivityMainBinding
 
-    private val addHappyPlaceResult = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+    private val addHappyPlaceResult = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+        // result contains: resultCode, data, toString
         if (result.resultCode == Activity.RESULT_OK) {
             getHappyPlaceListFromLocalDB()
         }
@@ -29,7 +32,7 @@ class MainActivity : AppCompatActivity() {
         bi = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bi.root)
 
-        findViewById<FloatingActionButton>(R.id.fabAddHappyPlaces).setOnClickListener {
+        bi.fabAddHappyPlaces.setOnClickListener {
             val intent = Intent(this, AddHappyPlaceActivity::class.java)
             addHappyPlaceResult.launch(intent)
         }
@@ -71,6 +74,16 @@ class MainActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         })
+
+        val editSwipeHandler = object : SwipeToEditCallback(this) {
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                val adapter = bi.rvHappyPlacesList.adapter as HappyPlacesAdapter
+                adapter.notifyEditItem(viewHolder.adapterPosition, addHappyPlaceResult)
+            }
+        }
+
+        val editItemTouchHelper = ItemTouchHelper(editSwipeHandler)
+        editItemTouchHelper.attachToRecyclerView(bi.rvHappyPlacesList)
     }
 
     companion object {

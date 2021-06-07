@@ -8,6 +8,7 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.os.Parcelable
 import android.provider.Settings
 import android.view.View
 import android.widget.Toast
@@ -39,6 +40,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var mLatitude: Double = 0.0
     private var mLongitude: Double = 0.0
 
+    private var mHappyPlaceDetails: HappyPlaceModel? = null
+
     private val pickImagesFromGallery = registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
         if (result == null) {
             Toast.makeText(this, "Nothing selected / User Cancelled", Toast.LENGTH_SHORT).show()
@@ -69,11 +72,32 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             onBackPressed()
         }
 
+        if (intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)) {
+            mHappyPlaceDetails = intent.getParcelableExtra<Parcelable>(
+                MainActivity.EXTRA_PLACE_DETAILS)!! as HappyPlaceModel
+        }
+
         dateSetListener = DatePickerDialog.OnDateSetListener {
             _, year, month, dayOfMonth ->
             cal.set(year, month, dayOfMonth)
         }
         updateDateInView()
+
+        if (mHappyPlaceDetails != null) {
+            supportActionBar?.title = "Edit Happy Place"
+
+            bi.etTitle.setText(mHappyPlaceDetails!!.title)
+            bi.etDescription.setText(mHappyPlaceDetails!!.description)
+            bi.etDate.setText(mHappyPlaceDetails!!.date)
+            bi.etLocation.setText(mHappyPlaceDetails!!.location)
+            mLatitude = mHappyPlaceDetails!!.latitude
+            mLongitude = mHappyPlaceDetails!!.longitude
+
+            imageUri = Uri.parse(mHappyPlaceDetails!!.image)
+            bi.ivPlaceImage.setImageURI(imageUri)
+
+            bi.btnSave.text = "UPDATE"
+        }
 
         bi.etDate.setOnClickListener(this)
         bi.tvAddImage.setOnClickListener(this)
@@ -228,7 +252,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     private fun dbSave() {
         val happyPlaceModel = HappyPlaceModel(
-            0,
+            mHappyPlaceDetails?.id ?: 0,
             bi.etTitle.text.toString(),
             copyToImageDir(imageUri!!).toString(),
             bi.etDescription.text.toString(),
@@ -238,16 +262,33 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             mLongitude
         )
         val dbHandler = DatabaseHandler(this)
-        val addHappyPlace = dbHandler.addHappyPlace(happyPlaceModel)
 
-        if (addHappyPlace > 0) {
-            Toast.makeText(this,
-                "The happy place details are inserted successfully",
-                Toast.LENGTH_SHORT).show()
+        if (mHappyPlaceDetails == null) {
+            val addHappyPlace = dbHandler.addHappyPlace(happyPlaceModel)
 
-            setResult(Activity.RESULT_OK)
-            finish()
+            if (addHappyPlace > 0) {
+                Toast.makeText(this,
+                    "The happy place details are inserted successfully",
+                    Toast.LENGTH_SHORT).show()
+
+                setResult(Activity.RESULT_OK)
+                finish()
+            }
+        } else {
+            val updateHappyPlace = dbHandler.updateHappyPlace(happyPlaceModel)
+
+            if (updateHappyPlace > 0) {
+                Toast.makeText(
+                    this,
+                    "The happy place details are updated successfully",
+                    Toast.LENGTH_SHORT
+                ).show()
+
+                setResult(Activity.RESULT_OK)
+                finish()
+            }
         }
+
     }
 
     override fun onDestroy() {
