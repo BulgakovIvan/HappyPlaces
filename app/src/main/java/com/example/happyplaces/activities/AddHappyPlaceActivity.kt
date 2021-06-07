@@ -7,12 +7,15 @@ import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.provider.Settings
+import android.util.Size
 import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.FileProvider.getUriForFile
 import com.example.happyplaces.R
@@ -42,23 +45,26 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     private var mHappyPlaceDetails: HappyPlaceModel? = null
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private val pickImagesFromGallery = registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
         if (result == null) {
             Toast.makeText(this, "Nothing selected / User Cancelled", Toast.LENGTH_SHORT).show()
         }
         else {
             imageUri = result
-            bi.ivPlaceImage.setImageURI(imageUri)
+            val bitmap = this.contentResolver.loadThumbnail(imageUri!!,Size(200, 200), null)
+            bi.ivPlaceImage.setImageBitmap(bitmap)
         }
 
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     private val takePictureByCamera = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
         if (success) {
-            bi.ivPlaceImage.setImageURI(imageUri)
+            val bitmap = this.contentResolver.loadThumbnail(imageUri!!,Size(200, 200), null)
+            bi.ivPlaceImage.setImageBitmap(bitmap)
         }
     }
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -96,7 +102,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             imageUri = Uri.parse(mHappyPlaceDetails!!.image)
             bi.ivPlaceImage.setImageURI(imageUri)
 
-            bi.btnSave.text = "UPDATE"
+            bi.btnSave.text = R.string.btnUpdate.toString()
         }
 
         bi.etDate.setOnClickListener(this)
@@ -159,6 +165,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             .withPermissions(Manifest.permission.READ_EXTERNAL_STORAGE,
                              Manifest.permission.WRITE_EXTERNAL_STORAGE)
             .withListener(object : MultiplePermissionsListener {
+                @RequiresApi(Build.VERSION_CODES.Q)
                 override fun onPermissionsChecked(report: MultiplePermissionsReport?)
                 {
                     if (report!!.areAllPermissionsGranted()) {
@@ -181,6 +188,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                              Manifest.permission.WRITE_EXTERNAL_STORAGE,
                              Manifest.permission.CAMERA)
             .withListener(object : MultiplePermissionsListener {
+                @RequiresApi(Build.VERSION_CODES.Q)
                 override fun onPermissionsChecked(report: MultiplePermissionsReport?)
                 {
                     if (report!!.areAllPermissionsGranted()) {

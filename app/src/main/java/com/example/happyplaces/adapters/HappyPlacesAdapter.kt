@@ -3,12 +3,15 @@ package com.example.happyplaces.adapters
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.util.Size
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.activity.result.ActivityResultLauncher
+import androidx.annotation.RequiresApi
 import androidx.recyclerview.widget.RecyclerView
 import com.example.happyplaces.R
 import com.example.happyplaces.activities.AddHappyPlaceActivity
@@ -32,11 +35,14 @@ open class HappyPlacesAdapter(
         )
     }
 
+    @RequiresApi(Build.VERSION_CODES.Q)
     override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val model = list[position]
 
         if (holder is MyViewHolder) {
-            holder.itemView.findViewById<ImageView>(R.id.iv_place_image).setImageURI(Uri.parse(model.image))
+            val bitmap = context.contentResolver.loadThumbnail(Uri.parse(model.image), Size(70, 70), null)
+            holder.itemView.findViewById<ImageView>(R.id.iv_place_image).setImageBitmap(bitmap)
+
             holder.itemView.findViewById<TextView>(R.id.tvTitle).text = model.title
             holder.itemView.findViewById<TextView>(R.id.tvDescription).text = model.description
 
