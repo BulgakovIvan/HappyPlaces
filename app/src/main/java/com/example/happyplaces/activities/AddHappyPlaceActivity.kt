@@ -102,7 +102,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             imageUri = Uri.parse(mHappyPlaceDetails!!.image)
             bi.ivPlaceImage.setImageURI(imageUri)
 
-            bi.btnSave.text = R.string.btnUpdate.toString()
+            bi.btnSave.text = this.getText(R.string.btnUpdate)
         }
 
         bi.etDate.setOnClickListener(this)
