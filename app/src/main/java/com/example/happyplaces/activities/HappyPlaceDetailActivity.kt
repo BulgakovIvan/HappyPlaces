@@ -1,5 +1,6 @@
 package com.example.happyplaces.activities
 
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcelable
@@ -34,6 +35,12 @@ class HappyPlaceDetailActivity : AppCompatActivity() {
             bi.ivPlaceImage.setImageURI(Uri.parse(happyPlaceDetailModel.image))
             bi.tvDescription.text = happyPlaceDetailModel.description
             bi.tvLocation.text = happyPlaceDetailModel.location
+
+            bi.btnViewOnMap.setOnClickListener {
+                val intent = Intent(this, MapActivity::class.java)
+                intent.putExtra(MainActivity.EXTRA_PLACE_DETAILS, happyPlaceDetailModel)
+                startActivity(intent)
+            }
         }
     }
 }

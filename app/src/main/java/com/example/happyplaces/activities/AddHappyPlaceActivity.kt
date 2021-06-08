@@ -88,7 +88,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
         if (!Places.isInitialized()) {
             Places.initialize(this,
-                resources.getString(R.string.google_maps_api_key))
+                resources.getString(R.string.google_maps_KEY))
         }
 
         if (intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)) {
