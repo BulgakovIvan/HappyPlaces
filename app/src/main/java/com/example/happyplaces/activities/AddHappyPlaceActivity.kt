@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.os.Parcelable
 import android.provider.Settings
+import android.util.Log
 import android.util.Size
 import android.view.View
 import android.widget.Toast
@@ -22,6 +23,11 @@ import com.example.happyplaces.R
 import com.example.happyplaces.database.DatabaseHandler
 import com.example.happyplaces.databinding.ActivityAddHappyPlaceBinding
 import com.example.happyplaces.models.HappyPlaceModel
+import com.google.android.libraries.places.api.Places
+import com.google.android.libraries.places.api.model.Place
+import com.google.android.libraries.places.widget.Autocomplete
+import com.google.android.libraries.places.widget.AutocompleteActivity
+import com.google.android.libraries.places.widget.model.AutocompleteActivityMode
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -34,6 +40,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
+    private val tag = "ups"
+
     private lateinit var bi: ActivityAddHappyPlaceBinding
     private var cal = Calendar.getInstance()
     private lateinit var dateSetListener: DatePickerDialog.OnDateSetListener
@@ -78,6 +86,11 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             onBackPressed()
         }
 
+        if (!Places.isInitialized()) {
+            Places.initialize(this,
+                resources.getString(R.string.google_maps_api_key))
+        }
+
         if (intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)) {
             mHappyPlaceDetails = intent.getParcelableExtra<Parcelable>(
                 MainActivity.EXTRA_PLACE_DETAILS)!! as HappyPlaceModel
@@ -108,6 +121,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         bi.etDate.setOnClickListener(this)
         bi.tvAddImage.setOnClickListener(this)
         bi.btnSave.setOnClickListener(this)
+        bi.etLocation.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {
@@ -151,7 +165,57 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
             }
+            R.id.et_location -> {
+                try {
+                    // Set the fields to specify which types of place data to
+                    // return after the user has made a selection.
+                    val fields = listOf(Place.Field.ID, Place.Field.NAME, Place.Field.LAT_LNG, Place.Field.ADDRESS)
+
+                    // Start the autocomplete intent.
+                    val intent = Autocomplete.IntentBuilder(AutocompleteActivityMode.FULLSCREEN, fields)
+                        .build(this)
+                    // TODO: 08.06.2021 change deprecated
+                    startActivityForResult(intent, PLACES_AUTOCOMPLETE_REQUEST_CODE)
+
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
         }
+    }
+
+    // TODO: 08.06.2021 change deprecated
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == PLACES_AUTOCOMPLETE_REQUEST_CODE) {
+            when (resultCode) {
+                Activity.RESULT_OK -> {
+                    data?.let {
+                        val place = Autocomplete.getPlaceFromIntent(data)
+                        bi.etLocation.setText(place.address)
+                        mLatitude = place.latLng!!.latitude
+                        mLongitude = place.latLng!!.longitude
+
+                        Log.e(tag, "Name: ${place.name}, " +
+                                "ID: ${place.id}, " +
+                                "Address: ${place.address}, " +
+                                "Lat ${place.latLng!!.latitude}, " +
+                                "Long ${place.latLng!!.longitude}, ")
+                    }
+                }
+                AutocompleteActivity.RESULT_ERROR -> {
+                    // Handle the error.
+                    data?.let {
+                        val status = Autocomplete.getStatusFromIntent(data)
+                        status.statusMessage?.let { it1 -> Log.e(tag, it1) }
+                    }
+                }
+                Activity.RESULT_CANCELED -> {
+                    // The user canceled the operation.
+                }
+            }
+            return
+        }
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun updateDateInView() {
@@ -308,4 +372,9 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             for (file in files) file.delete()
         }
     }
+
+    companion object {
+        private const val PLACES_AUTOCOMPLETE_REQUEST_CODE = 3
+    }
+
 }

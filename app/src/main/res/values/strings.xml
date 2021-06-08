@@ -10,4 +10,6 @@
     <string name="btnUpdate">UPDATE</string>
 
     <string name="image_content_description">image</string>
+
+    <string name="google_maps_api_key">AIzaSyBQQstYNTYwNWWHcdk2yy5m9d6nzlVV_0s</string>
 </resources>
