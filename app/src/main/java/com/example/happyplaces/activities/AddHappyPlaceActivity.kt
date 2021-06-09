@@ -1,16 +1,19 @@
 package com.example.happyplaces.activities
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Looper
 import android.os.Parcelable
 import android.provider.Settings
 import android.util.Log
@@ -25,6 +28,7 @@ import com.example.happyplaces.R
 import com.example.happyplaces.database.DatabaseHandler
 import com.example.happyplaces.databinding.ActivityAddHappyPlaceBinding
 import com.example.happyplaces.models.HappyPlaceModel
+import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
 import com.google.android.libraries.places.widget.Autocomplete
@@ -54,6 +58,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private var mLongitude: Double = 0.0
 
     private var mHappyPlaceDetails: HappyPlaceModel? = null
+
+    private lateinit var mFusedLocationProviderClient: FusedLocationProviderClient
 
     @RequiresApi(Build.VERSION_CODES.Q)
     private val pickImagesFromGallery = registerForActivityResult(ActivityResultContracts.GetContent()) { result ->
@@ -92,6 +98,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             Places.initialize(this,
                 resources.getString(R.string.google_maps_KEY))
         }
+
+        mFusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
         if (intent.hasExtra(MainActivity.EXTRA_PLACE_DETAILS)) {
             mHappyPlaceDetails = intent.getParcelableExtra<Parcelable>(
@@ -203,11 +211,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                             override fun onPermissionsChecked(report: MultiplePermissionsReport?)
                             {
                                 if (report!!.areAllPermissionsGranted()) {
-                                    Toast.makeText(
-                                        this@AddHappyPlaceActivity,
-                                        "Location permission is granded.",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
+                                    requestNewLocationData()
                                 }
                             }
 
@@ -263,6 +267,27 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
                 locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun requestNewLocationData() {
+        var mLocationRequest = LocationRequest() // TODO: 09.06.2021 deprecated
+        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+        mLocationRequest.interval = 1000
+        mLocationRequest.numUpdates = 1
+
+        mFusedLocationProviderClient.requestLocationUpdates(
+            mLocationRequest, mLocationCallback, Looper.myLooper())
+    }
+
+    private val mLocationCallback = object : LocationCallback() {
+        override fun onLocationResult(locationResult: LocationResult) {
+            val mLastLocation: Location = locationResult.lastLocation
+            mLatitude = mLastLocation.latitude
+            mLongitude = mLastLocation.longitude
+
+            Log.e("ups", "lat: $mLatitude, long: $mLongitude")
+        }
     }
 
     private fun updateDateInView() {
