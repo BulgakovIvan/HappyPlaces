@@ -5,7 +5,9 @@ import android.app.Activity
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
+import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -122,6 +124,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         bi.tvAddImage.setOnClickListener(this)
         bi.btnSave.setOnClickListener(this)
         bi.etLocation.setOnClickListener(this)
+        bi.tvSelectCurrentLocation.setOnClickListener(this)
     }
 
     override fun onClick(v: View?) {
@@ -181,6 +184,44 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     e.printStackTrace()
                 }
             }
+            R.id.tv_select_current_location -> {
+                if (!isLocationEnabled()) {
+                    Toast.makeText(
+                        this,
+                        "Your location provider is turned off.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+
+                    val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                    startActivity(intent)
+                } else {
+                    Dexter.withContext(this)
+                        .withPermissions(Manifest.permission.ACCESS_FINE_LOCATION,
+                                         Manifest.permission.ACCESS_COARSE_LOCATION)
+                        .withListener(object : MultiplePermissionsListener {
+                            @RequiresApi(Build.VERSION_CODES.Q)
+                            override fun onPermissionsChecked(report: MultiplePermissionsReport?)
+                            {
+                                if (report!!.areAllPermissionsGranted()) {
+                                    Toast.makeText(
+                                        this@AddHappyPlaceActivity,
+                                        "Location permission is granded.",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                }
+                            }
+
+                            override fun onPermissionRationaleShouldBeShown(
+                                permissions: MutableList<PermissionRequest>, token: PermissionToken)
+                            {
+                                showRationalDialogForPermissions()
+                            }
+                        })
+                        .onSameThread()
+                        .check()
+                }
+
+            }
         }
     }
 
@@ -218,6 +259,12 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
         super.onActivityResult(requestCode, resultCode, data)
     }
 
+    private fun isLocationEnabled(): Boolean {
+        val locationManager = getSystemService(Context.LOCATION_SERVICE) as LocationManager
+        return locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) ||
+                locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
+    }
+
     private fun updateDateInView() {
         val myFormat = "dd.MM.yyyy"
         val sdf = SimpleDateFormat(myFormat, Locale.getDefault())
@@ -237,7 +284,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                override fun onPermissionRationaleShouldBeShown(permissions: MutableList<PermissionRequest>, token: PermissionToken)
+                override fun onPermissionRationaleShouldBeShown(
+                    permissions: MutableList<PermissionRequest>, token: PermissionToken)
                 {
                     showRationalDialogForPermissions()
                 }
@@ -261,7 +309,8 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                     }
                 }
 
-                override fun onPermissionRationaleShouldBeShown(permissions: MutableList<PermissionRequest>, token: PermissionToken)
+                override fun onPermissionRationaleShouldBeShown(
+                    permissions: MutableList<PermissionRequest>, token: PermissionToken)
                 {
                     showRationalDialogForPermissions()
                 }
