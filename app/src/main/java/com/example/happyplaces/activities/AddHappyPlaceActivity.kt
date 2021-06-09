@@ -28,6 +28,7 @@ import com.example.happyplaces.R
 import com.example.happyplaces.database.DatabaseHandler
 import com.example.happyplaces.databinding.ActivityAddHappyPlaceBinding
 import com.example.happyplaces.models.HappyPlaceModel
+import com.example.happyplaces.utils.GetAddressFromLatlng
 import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
 import com.google.android.libraries.places.api.model.Place
@@ -273,7 +274,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     private fun requestNewLocationData() {
         var mLocationRequest = LocationRequest() // TODO: 09.06.2021 deprecated
         mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        mLocationRequest.interval = 1000
+        mLocationRequest.interval = 0 //1000
         mLocationRequest.numUpdates = 1
 
         mFusedLocationProviderClient.requestLocationUpdates(
@@ -285,6 +286,21 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             val mLastLocation: Location = locationResult.lastLocation
             mLatitude = mLastLocation.latitude
             mLongitude = mLastLocation.longitude
+
+            val addressTask = GetAddressFromLatlng(
+                this@AddHappyPlaceActivity, mLatitude, mLongitude)
+
+            addressTask.setAddressListener(object: GetAddressFromLatlng.AddressListener{
+                override fun onAddressFound(address: String?) {
+                    bi.etLocation.setText(address)
+                }
+
+                override fun onError() {
+                    Log.e("ups", "Something went wrong")
+                }
+            })
+
+            addressTask.getAddress()
 
             Log.e("ups", "lat: $mLatitude, long: $mLongitude")
         }
