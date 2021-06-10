@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
     private fun getHappyPlaceListFromLocalDB() {
         val dbHandler = DatabaseHandler(this)
 
-        // TODO: 02.06.2021 delete fun
+//        Delete HappyPlaceTable
 //        dbHandler.deleteDataFromHappyPLaceTable()
 
         val getHappyPlaceList: ArrayList<HappyPlaceModel> = dbHandler.getHappyPlacesList()

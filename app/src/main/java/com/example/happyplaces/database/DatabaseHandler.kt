@@ -75,8 +75,7 @@ class DatabaseHandler (context: Context) :
         val result = db.insert(TABLE_HAPPY_PLACE, null, contentValues)
         //2nd argument is String containing nullColumnHack
 
-        // TODO: 02.06.2021 make close
-//        db.close()
+        db.close()
         return result
     }
 
@@ -98,8 +97,7 @@ class DatabaseHandler (context: Context) :
             KEY_ID + "=" + happyPlace.id,
             null)
 
-        // TODO: 02.06.2021 make close
-//        db.close()
+        db.close()
         return success
     }
 
