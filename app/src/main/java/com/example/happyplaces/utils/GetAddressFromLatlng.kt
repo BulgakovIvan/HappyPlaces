@@ -6,7 +6,7 @@ import android.location.Geocoder
 import android.os.AsyncTask
 import java.util.*
 
-// TODO: 09.06.2021 deprecated
+// TODO: 09.06.2021 AsyncTask deprecated
 class GetAddressFromLatlng(context: Context,
                            private val latitude: Double,
                            private val longitude: Double): AsyncTask<Void, String, String>(){
