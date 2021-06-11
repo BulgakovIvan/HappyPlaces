@@ -247,13 +247,14 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
 
     @SuppressLint("MissingPermission")
     private fun requestNewLocationData() {
-        val mLocationRequest = LocationRequest() // TODO: 09.06.2021 LocationRequest() deprecated
-        mLocationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        mLocationRequest.interval = 0 //1000
-        mLocationRequest.numUpdates = 1
+        val mLocationRequest =LocationRequest.create().apply {
+            interval = 0 //1000
+            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
+            numUpdates = 1
+        }
 
         mFusedLocationProviderClient.requestLocationUpdates(
-            mLocationRequest, mLocationCallback, Looper.myLooper())
+            mLocationRequest, mLocationCallback, Looper.myLooper()!!)
     }
 
     private val mLocationCallback = object : LocationCallback() {
