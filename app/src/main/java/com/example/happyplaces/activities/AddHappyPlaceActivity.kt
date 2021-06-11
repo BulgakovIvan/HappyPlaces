@@ -8,6 +8,8 @@ import android.app.DatePickerDialog
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
+import android.location.Address
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationManager
 import android.net.Uri
@@ -28,7 +30,6 @@ import com.example.happyplaces.R
 import com.example.happyplaces.database.DatabaseHandler
 import com.example.happyplaces.databinding.ActivityAddHappyPlaceBinding
 import com.example.happyplaces.models.HappyPlaceModel
-import com.example.happyplaces.utils.GetAddressFromLatlng
 import com.example.happyplaces.utils.MyAutocompleteContract
 import com.google.android.gms.location.*
 import com.google.android.libraries.places.api.Places
@@ -38,6 +39,7 @@ import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
+import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
 import java.io.OutputStream
@@ -234,7 +236,6 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
                         .onSameThread()
                         .check()
                 }
-
             }
         }
     }
@@ -248,7 +249,7 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
     @SuppressLint("MissingPermission")
     private fun requestNewLocationData() {
         val mLocationRequest =LocationRequest.create().apply {
-            interval = 0 //1000
+            interval = 100 //1000
             priority = LocationRequest.PRIORITY_HIGH_ACCURACY
             numUpdates = 1
         }
@@ -263,22 +264,48 @@ class AddHappyPlaceActivity : AppCompatActivity(), View.OnClickListener {
             mLatitude = mLastLocation.latitude
             mLongitude = mLastLocation.longitude
 
-            val addressTask = GetAddressFromLatlng(
-                this@AddHappyPlaceActivity, mLatitude, mLongitude)
-
-            addressTask.setAddressListener(object: GetAddressFromLatlng.AddressListener{
-                override fun onAddressFound(address: String?) {
-                    bi.etLocation.setText(address)
-                }
-
-                override fun onError() {
-                    Log.e("ups", "Something went wrong")
-                }
-            })
-
-            addressTask.getAddress()
-
             Log.e("ups", "lat: $mLatitude, long: $mLongitude")
+
+//            Get address from latitude and longitude with coroutine
+            CoroutineScope(Dispatchers.Main).launch {
+                getAddressFromLatlng(this@AddHappyPlaceActivity,mLatitude, mLongitude)
+            }
+        }
+    }
+
+    @Suppress("BlockingMethodInNonBlockingContext")
+    private suspend fun getAddressFromLatlng(context: Context, latitude: Double, longitude: Double) {
+        val address= withContext(Dispatchers.IO){
+            val geocoder = Geocoder(context, Locale.getDefault())
+            val addressList: List<Address>? = geocoder.getFromLocation(latitude, longitude, 1)
+            var localAddress: String? = null
+
+            try {
+                if (addressList != null && addressList.isNotEmpty()) {
+                    val address: Address = addressList[0]
+                    val sb = StringBuilder()
+                    for (i in 0..address.maxAddressLineIndex) {
+                        sb.append(address.getAddressLine(i)).append(" ")
+                    }
+                    sb.deleteCharAt(sb.length - 1)
+                    localAddress = sb.toString()
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            return@withContext  localAddress
+        }
+
+        withContext(Dispatchers.Main) {
+            if (address != null) {
+                bi.etLocation.setText(address)
+            } else {
+                Toast.makeText(
+                    this@AddHappyPlaceActivity,
+                    "Something went wrong with Location",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
         }
     }
 
