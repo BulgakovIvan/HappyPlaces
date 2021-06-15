@@ -41,6 +41,14 @@ class HappyPlaceDetailActivity : AppCompatActivity() {
                 intent.putExtra(MainActivity.EXTRA_PLACE_DETAILS, happyPlaceDetailModel)
                 startActivity(intent)
             }
+
+            bi.btnViewOnMapYandex.setOnClickListener {
+                val intent = Intent(this, MapKitActivity::class.java)
+                intent.putExtra("latitude", happyPlaceDetailModel.latitude)
+                intent.putExtra("longitude", happyPlaceDetailModel.longitude)
+                intent.putExtra("title", happyPlaceDetailModel.title)
+                startActivity(intent)
+            }
         }
     }
 }

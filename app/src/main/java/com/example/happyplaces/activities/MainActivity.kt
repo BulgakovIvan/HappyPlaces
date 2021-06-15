@@ -10,12 +10,14 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.happyplaces.R
 import com.example.happyplaces.adapters.HappyPlacesAdapter
 import com.example.happyplaces.database.DatabaseHandler
 import com.example.happyplaces.databinding.ActivityMainBinding
 import com.example.happyplaces.models.HappyPlaceModel
 import com.example.happyplaces.utils.SwipeToDeleteCallback
 import com.example.happyplaces.utils.SwipeToEditCallback
+import com.yandex.mapkit.MapKitFactory
 
 class MainActivity : AppCompatActivity() {
     private lateinit var bi: ActivityMainBinding
@@ -32,6 +34,8 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         bi = ActivityMainBinding.inflate(layoutInflater)
         setContentView(bi.root)
+
+        MapKitFactory.setApiKey(getString(R.string.yandex_KEY))
 
         bi.fabAddHappyPlaces.setOnClickListener {
             val intent = Intent(this, AddHappyPlaceActivity::class.java)

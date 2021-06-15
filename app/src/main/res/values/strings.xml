@@ -11,6 +11,7 @@
 
     <string name="image_content_description">image</string>
 
-    <string name="btn_text_view_on_map">VIEW ON MAP</string>
+    <string name="btn_text_view_on_google_map">VIEW ON GOOGLE MAP</string>
+    <string name="btn_text_view_on_yandex_map">VIEW ON YANDEX MAP</string>
     <string name="add_place_select_current_location_text">SELECT CURRENT LOCATION</string>
 </resources>
